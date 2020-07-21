@@ -1,0 +1,10 @@
+[package]
+name = "vulkan_samples_2019_rust"
+version = "0.1.0"
+authors = ["Yasuhiro Taniuchi"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vulkano="0.19.0"
