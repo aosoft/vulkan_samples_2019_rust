@@ -1,16 +1,16 @@
 use clap::{App, Arg, ArgMatches};
 
 pub struct Configs {
-    prog_name: String,
-    list: bool,
-    device_index: u32,
-    width: u32,
-    height: u32,
-    fullscreen: bool,
-    validation: bool,
-    debug_mode: bool,
-    shader_dir: String,
-    mesh_file: String,
+    pub prog_name: String,
+    pub list: bool,
+    pub device_index: u32,
+    pub width: u32,
+    pub height: u32,
+    pub fullscreen: bool,
+    pub validation: bool,
+    pub debug_mode: bool,
+    pub shader_dir: String,
+    pub mesh_file: String,
 }
 
 impl Configs {
