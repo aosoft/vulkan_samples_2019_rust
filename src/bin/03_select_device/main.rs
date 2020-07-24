@@ -22,9 +22,15 @@ fn main() {
         }),
     };
 
+    let mut required_ext = std::collections::HashSet::<std::ffi::CString>::new();
+    for x in glfw.get_required_instance_extensions().unwrap() {
+        required_ext.insert(std::ffi::CString::new(x).unwrap());
+    }
+    let ext = vulkano::instance::RawInstanceExtensions::new(required_ext);
+
     let instance = vulkano::instance::Instance::new(
         Some(&app_info),
-        &vulkano::instance::InstanceExtensions::none(),
+        ext,
         if config.validation {
             vec!["VK_LAYER_LUNARG_standard_validation"]
         } else {
@@ -39,12 +45,13 @@ fn main() {
         return;
     }
 
+
     let validated_devices: Vec<vulkano::instance::PhysicalDevice> = devices
         .filter(|device| {
             for family in device.queue_families() {
                 if glfw.get_physical_device_presentation_support_raw(
-                    instance.internal_object() as usize,
-                    device.index(),
+                    instance.internal_object(),
+                    device.internal_object(),
                     family.id(),
                 ) {
                     return true;
@@ -56,5 +63,10 @@ fn main() {
     if validated_devices.len() == 0 {
         println!("必要な拡張とレイヤーを備えたデバイスがない");
         return;
+    }
+
+    println!("利用可能なデバイス");
+    for i in 0..validated_devices.len() {
+        println!("{}: {}", i, validated_devices[i].name())
     }
 }
