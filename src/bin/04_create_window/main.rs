@@ -1,12 +1,12 @@
-//  03_select_device
+//  04_create_window
 use std::borrow::Cow;
 use vulkan_samples_2019_rust::config;
 use vulkano::VulkanObject;
 
 fn main() {
-    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let config = config::Configs::new("select_device");
+    let config = config::Configs::new("create_window");
     let app_info = vulkano::instance::ApplicationInfo {
         application_name: Some(Cow::from(config.prog_name.as_str())),
         application_version: Some(vulkano::instance::Version {
@@ -68,4 +68,34 @@ fn main() {
     for i in 0..validated_devices.len() {
         println!("{}: {}", i, validated_devices[i].name())
     }
+
+    glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
+
+    let window = glfw.with_primary_monitor(|glfw, m| {
+        glfw.create_window(
+            config.width,
+            config.height,
+            config.prog_name.as_str(),
+            if config.fullscreen {
+                m.map_or(glfw::WindowMode::Windowed, |m| {
+                    glfw::WindowMode::FullScreen(m.clone())
+                })
+            } else {
+                glfw::WindowMode::Windowed
+            },
+        )
+    });
+
+    if window.is_none() {
+        eprintln!("ウィンドウを作成できない");
+        return;
+    }
+
+    let window = window.unwrap();
+    let mut raw_surface: vk_sys::SurfaceKHR = 0;
+    if window.0.create_window_surface(instance.internal_object(), std::ptr::null(), &mut raw_surface) != 0 {
+        eprintln!("サーフェスを作成できない");
+    }
+
+    let surface = unsafe { vulkano::swapchain::Surface::from_raw_surface(instance, raw_surface, window) };
 }

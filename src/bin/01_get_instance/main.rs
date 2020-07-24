@@ -19,7 +19,7 @@ fn main() {
         }),
     };
 
-    let instance = vulkano::instance::Instance::new(
+    vulkano::instance::Instance::new(
         Some(&app_info),
         &vulkano::instance::InstanceExtensions::none(),
         if config.validation {

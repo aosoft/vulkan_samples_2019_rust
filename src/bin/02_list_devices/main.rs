@@ -32,7 +32,7 @@ fn main() {
 
     let devices = vulkano::instance::PhysicalDevice::enumerate(&instance);
     if devices.len() == 0 {
-        println!("利用可能なデバイスがない");
+        eprintln!("利用可能なデバイスがない");
         return;
     }
     for device in devices {
