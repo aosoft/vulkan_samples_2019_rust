@@ -1,4 +1,4 @@
-//  04_create_window
+//  05_create_device
 use std::borrow::Cow;
 use vulkan_samples_2019_rust::config;
 use vulkano::VulkanObject;
@@ -6,7 +6,7 @@ use vulkano::VulkanObject;
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let config = config::Configs::new("create_window");
+    let config = config::Configs::new("create_device");
     let app_info = vulkano::instance::ApplicationInfo {
         application_name: Some(Cow::from(config.prog_name.as_str())),
         application_version: Some(vulkano::instance::Version {
@@ -93,10 +93,47 @@ fn main() {
 
     let window = window.unwrap();
     let mut raw_surface: vk_sys::SurfaceKHR = 0;
-    if window.0.create_window_surface(instance.internal_object(), std::ptr::null(), &mut raw_surface) != 0 {
+    if window.0.create_window_surface(
+        instance.internal_object(),
+        std::ptr::null(),
+        &mut raw_surface,
+    ) != 0
+    {
         eprintln!("サーフェスを作成できない");
         return;
     }
 
-    let surface = unsafe { vulkano::swapchain::Surface::from_raw_surface(instance, raw_surface, window) };
+    let surface = unsafe {
+        vulkano::swapchain::Surface::from_raw_surface(instance.clone(), raw_surface, window)
+    };
+
+    if config.device_index as usize >= validated_devices.len() {
+        eprintln!("{} 番目のデバイスは存在しない", config.device_index);
+        return;
+    }
+
+    let physical_device = validated_devices[config.device_index as usize];
+    let mut queue_props = physical_device
+        .queue_families()
+        .filter(|family| surface.is_supported(*family).unwrap());
+
+    let graphics_queue = queue_props.find(|queue_prop| queue_prop.supports_graphics());
+
+    let present_queue = if graphics_queue.is_some() {
+        graphics_queue.clone()
+    } else {
+        queue_props.into_iter().next()
+    };
+
+    if graphics_queue.is_none() || present_queue.is_none() {
+        eprintln!("必要なキューが備わっていない");
+        return;
+    }
+
+    let device = vulkano::device::Device::new(
+        physical_device,
+        physical_device.supported_features(),
+        vulkano::device::RawDeviceExtensions::none(),
+        queue_props,
+    );
 }
