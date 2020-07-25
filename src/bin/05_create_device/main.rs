@@ -130,10 +130,26 @@ fn main() {
         return;
     }
 
-    let device = vulkano::device::Device::new(
+    let graphics_queue = graphics_queue.unwrap();
+    let present_queue = present_queue.unwrap();
+    let eq_queue = graphics_queue == present_queue;
+
+    let mut device = vulkano::device::Device::new(
         physical_device,
         physical_device.supported_features(),
         vulkano::device::RawDeviceExtensions::none(),
-        queue_props,
-    );
+        if eq_queue {
+            vec![(graphics_queue, 0.0)]
+        } else {
+            vec![(graphics_queue, 0.0), (present_queue, 0.0)]
+        },
+    )
+    .unwrap();
+
+    let graphics_queue = device.1.find(|queue| queue.family() == graphics_queue);
+    let present_queue = if eq_queue {
+        graphics_queue.clone()
+    } else {
+        device.1.find(|queue| queue.family() == present_queue)
+    };
 }
