@@ -1,5 +1,4 @@
-//  05_create_device
-
+//  06_create_swapchain
 use std::borrow::Cow;
 use vulkan_samples_2019_rust::config;
 use vulkano::VulkanObject;
@@ -8,7 +7,7 @@ use vulkano::VulkanObject;
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let config = config::Configs::new("create_device");
+    let config = config::Configs::new("create_swapchain");
     let app_info = vulkano::instance::ApplicationInfo {
         application_name: Some(Cow::from(config.prog_name.as_str())),
         application_version: Some(vulkano::instance::Version {
@@ -39,7 +38,7 @@ fn main() {
             Vec::<&str>::new()
         },
     )
-    .unwrap();
+        .unwrap();
 
     let devices = vulkano::instance::PhysicalDevice::enumerate(&instance);
     if devices.len() == 0 {
@@ -47,15 +46,23 @@ fn main() {
         return;
     }
 
+    let dext = vulkano::device::DeviceExtensions {
+        khr_swapchain: true,
+        ..vulkano::device::DeviceExtensions::none()
+    };
+
     let validated_devices: Vec<vulkano::instance::PhysicalDevice> = devices
         .filter(|device| {
-            for family in device.queue_families() {
-                if glfw.get_physical_device_presentation_support_raw(
-                    instance.internal_object(),
-                    device.internal_object(),
-                    family.id(),
-                ) {
-                    return true;
+            let ext = vulkano::device::DeviceExtensions::supported_by_device(*device);
+            if ext.khr_swapchain {
+                for family in device.queue_families() {
+                    if glfw.get_physical_device_presentation_support_raw(
+                        instance.internal_object(),
+                        device.internal_object(),
+                        family.id(),
+                    ) {
+                        return true;
+                    }
                 }
             }
             false
@@ -105,9 +112,9 @@ fn main() {
         return;
     }
 
-    let surface = unsafe {
+    let surface = std::sync::Arc::new(unsafe {
         vulkano::swapchain::Surface::from_raw_surface(instance.clone(), raw_surface, window)
-    };
+    });
 
     if config.device_index as usize >= validated_devices.len() {
         eprintln!("{} 番目のデバイスは存在しない", config.device_index);
@@ -139,14 +146,14 @@ fn main() {
     let mut device = vulkano::device::Device::new(
         physical_device,
         physical_device.supported_features(),
-        vulkano::device::RawDeviceExtensions::none(),
+        &dext,
         if eq_queue {
             vec![(graphics_queue, 0.0)]
         } else {
             vec![(graphics_queue, 0.0), (present_queue, 0.0)]
         },
     )
-    .unwrap();
+        .unwrap();
 
     let graphics_queue = device.1.find(|queue| queue.family() == graphics_queue);
     let present_queue = if eq_queue {
@@ -154,4 +161,61 @@ fn main() {
     } else {
         device.1.find(|queue| queue.family() == present_queue)
     };
+
+    let formats = surface
+        .capabilities(physical_device)
+        .unwrap()
+        .supported_formats;
+    if formats.len() == 0 {
+        eprintln!("利用可能なピクセルフォーマットが無い");
+        return;
+    }
+    let selected_format = match formats
+        .iter()
+        .find(|f| f.0 == vulkano::format::Format::B8G8R8A8Unorm)
+    {
+        Some(t) => Some(t),
+        None => formats
+            .iter()
+            .find(|f| f.0 == vulkano::format::Format::R8G8B8A8Unorm),
+    };
+    if selected_format.is_none() {
+        eprintln!("利用可能なピクセルフォーマットが無い");
+        return;
+    }
+
+    let format = selected_format.unwrap();
+
+    let surface_capabilities = surface.capabilities(physical_device).unwrap();
+    let swapchain_extent = surface_capabilities
+        .current_extent
+        .unwrap_or([config.width as u32, config.height as u32]);
+    let swapchain_image_count = std::cmp::min(
+        surface_capabilities.min_image_count + 1,
+        surface_capabilities.max_image_count.unwrap_or(0),
+    );
+
+    let swapchain = vulkano::swapchain::Swapchain::new(
+        device.0,
+        surface,
+        swapchain_image_count,
+        format.0,
+        swapchain_extent,
+        1,
+        vulkano::image::ImageUsage {
+            color_attachment: true,
+            ..vulkano::image::ImageUsage::none()
+        },
+        vulkano::sync::SharingMode::Exclusive,
+        if surface_capabilities.supported_transforms.identity {
+            vulkano::swapchain::SurfaceTransform::Identity
+        } else {
+            surface_capabilities.current_transform
+        },
+        vulkano::swapchain::CompositeAlpha::Opaque,
+        vulkano::swapchain::PresentMode::Fifo,
+        vulkano::swapchain::FullscreenExclusive::Default,
+        true,
+        format.1
+    );
 }

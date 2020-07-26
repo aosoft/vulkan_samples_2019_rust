@@ -1,8 +1,10 @@
 //  04_create_window
+
 use std::borrow::Cow;
 use vulkan_samples_2019_rust::config;
 use vulkano::VulkanObject;
 
+#[allow(unused_variables)]
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
