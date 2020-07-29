@@ -1,4 +1,4 @@
-//  06_create_swapchain
+//  08_create_render_pass
 use std::borrow::Cow;
 use vulkan_samples_2019_rust::config;
 use vulkano::VulkanObject;
@@ -7,7 +7,7 @@ use vulkano::VulkanObject;
 fn main() {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let config = config::Configs::new("create_swapchain");
+    let config = config::Configs::new("create_render_pass");
     let app_info = vulkano::instance::ApplicationInfo {
         application_name: Some(Cow::from(config.prog_name.as_str())),
         application_version: Some(vulkano::instance::Version {
@@ -179,36 +179,26 @@ fn main() {
 
     let format = selected_format.unwrap();
 
-    let surface_capabilities = surface.capabilities(physical_device).unwrap();
-    let swapchain_extent = surface_capabilities
-        .current_extent
-        .unwrap_or([config.width as u32, config.height as u32]);
-    let swapchain_image_count = std::cmp::min(
-        surface_capabilities.min_image_count + 1,
-        surface_capabilities.max_image_count.unwrap_or(0),
-    );
-
-    let swapchain = vulkano::swapchain::Swapchain::new(
+    let render_pass = vulkano::single_pass_renderpass!(
         device.0.clone(),
-        surface,
-        swapchain_image_count,
-        format.0,
-        swapchain_extent,
-        1,
-        vulkano::image::ImageUsage {
-            color_attachment: true,
-            ..vulkano::image::ImageUsage::none()
-        },
-        vulkano::sync::SharingMode::Exclusive,
-        if surface_capabilities.supported_transforms.identity {
-            vulkano::swapchain::SurfaceTransform::Identity
-        } else {
-            surface_capabilities.current_transform
-        },
-        vulkano::swapchain::CompositeAlpha::Opaque,
-        vulkano::swapchain::PresentMode::Fifo,
-        vulkano::swapchain::FullscreenExclusive::Default,
-        true,
-        format.1,
-    );
+            attachments: {
+                color: {
+                    load: Clear,
+                    store: Store,
+                    format: format.0,
+                    samples: 1,
+                },
+                depth_stencil: {
+                    load: DontCare,
+                    store: DontCare,
+                    format: vulkano::format::Format::D16Unorm,
+                    samples: 1,
+                }
+            },
+            pass: {
+                color: [color],
+                depth_stencil: {depth_stencil}
+            }
+    )
+    .unwrap();
 }
