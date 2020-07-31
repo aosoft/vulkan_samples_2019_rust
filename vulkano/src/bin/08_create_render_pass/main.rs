@@ -1,6 +1,6 @@
 //  08_create_render_pass
 use std::borrow::Cow;
-use vulkan_samples_2019_rust::config;
+use vk_sample_config::config;
 use vulkano::VulkanObject;
 
 #[allow(unused_variables)]

@@ -1,6 +1,6 @@
 //  01_get_instance
 use std::borrow::Cow;
-use vulkan_samples_2019_rust::config;
+use vk_sample_config::config;
 
 fn main() {
     let config = config::Configs::new("get_instance");
