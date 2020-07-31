@@ -1,5 +1,5 @@
 [package]
-name = "vulkan_samples_2019_rust"
+name = "vulkan_samples_2019_rust_vulkano"
 version = "0.1.0"
 authors = ["Yasuhiro Taniuchi"]
 edition = "2018"
