@@ -1,0 +1,18 @@
+[package]
+name = "vulkan_samples_2019_rust_ash"
+version = "0.1.0"
+authors = ["Yasuhiro Taniuchi"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vk-sample-config = { path = "../vk-sample-config" }
+ash = "0.31.0"
+vk-mem = "0.2.2"
+scopeguard = "1.1.0"
+
+[dependencies.glfw]
+version = "0.39.1"
+default-features = false
+features = ["vulkan"]
