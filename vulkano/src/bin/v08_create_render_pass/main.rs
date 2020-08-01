@@ -143,7 +143,7 @@ fn main() {
     let present_queue = present_queue.unwrap();
     let eq_queue = graphics_queue == present_queue;
 
-    let device = vulkano::device::Device::new(
+    let (device, queues) = vulkano::device::Device::new(
         physical_device,
         physical_device.supported_features(),
         &dext,
@@ -180,7 +180,7 @@ fn main() {
     let format = selected_format.unwrap();
 
     let render_pass = vulkano::single_pass_renderpass!(
-        device.0.clone(),
+        device.clone(),
             attachments: {
                 color: {
                     load: Clear,

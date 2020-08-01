@@ -136,7 +136,7 @@ fn main() {
     let present_queue = present_queue.unwrap();
     let eq_queue = graphics_queue == present_queue;
 
-    let mut device = vulkano::device::Device::new(
+    let (device, mut queues) = vulkano::device::Device::new(
         physical_device,
         physical_device.supported_features(),
         vulkano::device::RawDeviceExtensions::none(),
@@ -148,10 +148,10 @@ fn main() {
     )
     .unwrap();
 
-    let graphics_queue = device.1.find(|queue| queue.family() == graphics_queue);
+    let graphics_queue = queues.find(|queue| queue.family() == graphics_queue);
     let present_queue = if eq_queue {
         graphics_queue.clone()
     } else {
-        device.1.find(|queue| queue.family() == present_queue)
+        queues.find(|queue| queue.family() == present_queue)
     };
 }

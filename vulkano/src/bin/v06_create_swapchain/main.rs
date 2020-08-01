@@ -143,7 +143,7 @@ fn main() {
     let present_queue = present_queue.unwrap();
     let eq_queue = graphics_queue == present_queue;
 
-    let device = vulkano::device::Device::new(
+    let (device, queues) = vulkano::device::Device::new(
         physical_device,
         physical_device.supported_features(),
         &dext,
@@ -189,7 +189,7 @@ fn main() {
     );
 
     let swapchain = vulkano::swapchain::Swapchain::new(
-        device.0.clone(),
+        device.clone(),
         surface,
         swapchain_image_count,
         format.0,
