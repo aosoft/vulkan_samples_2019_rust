@@ -1,4 +1,4 @@
-//  03_select_device
+//  04_create_window
 #[macro_use(defer)]
 extern crate scopeguard;
 use ash::version::{EntryV1_0, InstanceV1_0};
@@ -6,11 +6,15 @@ use ash::vk::Handle;
 use vk_sample_config::config;
 
 fn main() {
-    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-    let config = config::Configs::new("select_device");
+    let config = config::Configs::new("create_window");
     let app_info = ash::vk::ApplicationInfo::builder()
-        .application_name(std::ffi::CString::new(config.prog_name.as_str()).unwrap().as_c_str())
+        .application_name(
+            std::ffi::CString::new(config.prog_name.as_str())
+                .unwrap()
+                .as_c_str(),
+        )
         .application_version(ash::vk::make_version(1, 0, 0))
         .engine_name(unsafe {
             std::ffi::CStr::from_ptr("sample_engine\0".as_ptr() as *const std::os::raw::c_char)
@@ -86,5 +90,46 @@ fn main() {
             .to_str()
             .unwrap()
         })
+    }
+
+    glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
+
+    let window = glfw.with_primary_monitor(|glfw, m| {
+        glfw.create_window(
+            config.width,
+            config.height,
+            config.prog_name.as_str(),
+            if config.fullscreen {
+                m.map_or(glfw::WindowMode::Windowed, |m| {
+                    glfw::WindowMode::FullScreen(m)
+                })
+            } else {
+                glfw::WindowMode::Windowed
+            },
+        )
+    });
+
+    if window.is_none() {
+        eprintln!("ウィンドウを作成できない");
+        return;
+    }
+
+    let window = window.unwrap();
+    let mut raw_surface: vk_sys::SurfaceKHR = 0;
+    if window.0.create_window_surface(
+        instance.handle().as_raw() as vk_sys::Instance,
+        std::ptr::null(),
+        &mut raw_surface,
+    ) != 0
+    {
+        eprintln!("サーフェスを作成できない");
+        return;
+    }
+
+    let surface_loader = ash::extensions::khr::Surface::new(&entry, &instance);
+    let surface = ash::vk::SurfaceKHR::from_raw(raw_surface);
+
+    defer! {
+         unsafe { surface_loader.destroy_surface(surface, None); }
     }
 }

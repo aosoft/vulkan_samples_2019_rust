@@ -7,7 +7,7 @@ use vk_sample_config::config;
 fn main() {
     let config = config::Configs::new("get_instance");
     let app_info = ash::vk::ApplicationInfo::builder()
-        .application_name(std::ffi::CString::new(config.prog_name).unwrap().as_c_str())
+        .application_name(std::ffi::CString::new(config.prog_name.as_str()).unwrap().as_c_str())
         .application_version(ash::vk::make_version(1, 0, 0))
         .engine_name(unsafe {
             std::ffi::CStr::from_ptr("sample_engine\0".as_ptr() as *const std::os::raw::c_char)
