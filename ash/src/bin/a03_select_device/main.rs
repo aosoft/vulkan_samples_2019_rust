@@ -10,7 +10,11 @@ fn main() {
 
     let config = config::Configs::new("select_device");
     let app_info = ash::vk::ApplicationInfo::builder()
-        .application_name(std::ffi::CString::new(config.prog_name.as_str()).unwrap().as_c_str())
+        .application_name(
+            std::ffi::CString::new(config.prog_name.as_str())
+                .unwrap()
+                .as_c_str(),
+        )
         .application_version(ash::vk::make_version(1, 0, 0))
         .engine_name(unsafe {
             std::ffi::CStr::from_ptr("sample_engine\0".as_ptr() as *const std::os::raw::c_char)
@@ -51,9 +55,33 @@ fn main() {
         return;
     }
 
+    let dext = [std::ptr::null::<i8>(); 0];
     let validated_devices = devices
         .into_iter()
         .filter(|device| {
+            if dext.len() > 0 {
+                let avail_dext = unsafe {
+                    instance
+                        .enumerate_device_extension_properties(*device)
+                        .unwrap()
+                };
+                if dext
+                    .iter()
+                    .find(|w| {
+                        avail_dext
+                            .iter()
+                            .find(|v| unsafe {
+                                std::ffi::CStr::from_ptr(v.extension_name.as_ptr())
+                                    == std::ffi::CStr::from_ptr(**w)
+                            })
+                            .is_some()
+                    })
+                    .is_none()
+                {
+                    return false;
+                }
+            }
+
             let queue_props =
                 unsafe { instance.get_physical_device_queue_family_properties(*device) };
             for i in 0..queue_props.len() {

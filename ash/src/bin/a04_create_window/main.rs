@@ -55,9 +55,29 @@ fn main() {
         return;
     }
 
+    let dext = [std::ptr::null::<i8>(); 0];
     let validated_devices = devices
         .into_iter()
         .filter(|device| {
+            if dext.len() > 0 {
+                let avail_dext = unsafe { instance.enumerate_device_extension_properties(*device).unwrap() };
+                if dext
+                    .iter()
+                    .find(|w| {
+                        avail_dext
+                            .iter()
+                            .find(|v| unsafe {
+                                std::ffi::CStr::from_ptr(v.extension_name.as_ptr())
+                                    == std::ffi::CStr::from_ptr(**w)
+                            })
+                            .is_some()
+                    })
+                    .is_none()
+                {
+                    return false;
+                }
+            }
+
             let queue_props =
                 unsafe { instance.get_physical_device_queue_family_properties(*device) };
             for i in 0..queue_props.len() {

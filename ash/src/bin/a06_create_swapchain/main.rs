@@ -56,9 +56,29 @@ fn main() {
         return;
     }
 
+    let dext = [ash::extensions::khr::Swapchain::name().as_ptr()];
     let validated_devices = devices
         .into_iter()
         .filter(|device| {
+            if dext.len() > 0 {
+                let avail_dext = unsafe { instance.enumerate_device_extension_properties(*device).unwrap() };
+                if dext
+                    .iter()
+                    .find(|w| {
+                        avail_dext
+                            .iter()
+                            .find(|v| unsafe {
+                                std::ffi::CStr::from_ptr(v.extension_name.as_ptr())
+                                    == std::ffi::CStr::from_ptr(**w)
+                            })
+                            .is_some()
+                    })
+                    .is_none()
+                {
+                    return false;
+                }
+            }
+
             let queue_props =
                 unsafe { instance.get_physical_device_queue_family_properties(*device) };
             for i in 0..queue_props.len() {
@@ -182,7 +202,9 @@ fn main() {
                 physical_device,
                 &ash::vk::DeviceCreateInfo::builder()
                     .queue_create_infos(&queues)
-                    .enabled_features(&features),
+                    .enabled_extension_names(&dext)
+                    .enabled_features(&features)
+                    .build(),
                 None,
             )
             .unwrap()
@@ -236,27 +258,35 @@ fn main() {
     );
 
     let swapchain_loader = ash::extensions::khr::Swapchain::new(&instance, &device);
-    let swapchain = unsafe { swapchain_loader.create_swapchain(
-        &ash::vk::SwapchainCreateInfoKHR::builder()
-            .surface(surface)
-            .min_image_count(swapchain_image_count)
-            .image_format(format.format)
-            .image_color_space(format.color_space)
-            .image_extent(swapchain_extent)
-            .image_array_layers(1)
-            .image_usage(ash::vk::ImageUsageFlags::COLOR_ATTACHMENT)
-            .image_sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
-            .pre_transform(
-                if surface_capabilities.supported_transforms.intersects(ash::vk::SurfaceTransformFlagsKHR::IDENTITY) {
-                    ash::vk::SurfaceTransformFlagsKHR::IDENTITY
-                } else {
-                    surface_capabilities.current_transform
-                })
-            .composite_alpha(ash::vk::CompositeAlphaFlagsKHR::OPAQUE)
-            .present_mode(ash::vk::PresentModeKHR::FIFO)
-            .clipped(true)
-            .build(),
-        None).unwrap()
+    let swapchain = unsafe {
+        swapchain_loader
+            .create_swapchain(
+                &ash::vk::SwapchainCreateInfoKHR::builder()
+                    .surface(surface)
+                    .min_image_count(swapchain_image_count)
+                    .image_format(format.format)
+                    .image_color_space(format.color_space)
+                    .image_extent(swapchain_extent)
+                    .image_array_layers(1)
+                    .image_usage(ash::vk::ImageUsageFlags::COLOR_ATTACHMENT)
+                    .image_sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
+                    .pre_transform(
+                        if surface_capabilities
+                            .supported_transforms
+                            .intersects(ash::vk::SurfaceTransformFlagsKHR::IDENTITY)
+                        {
+                            ash::vk::SurfaceTransformFlagsKHR::IDENTITY
+                        } else {
+                            surface_capabilities.current_transform
+                        },
+                    )
+                    .composite_alpha(ash::vk::CompositeAlphaFlagsKHR::OPAQUE)
+                    .present_mode(ash::vk::PresentModeKHR::FIFO)
+                    .clipped(true)
+                    .build(),
+                None,
+            )
+            .unwrap()
     };
 
     defer! { unsafe { swapchain_loader.destroy_swapchain(swapchain, None); } }
