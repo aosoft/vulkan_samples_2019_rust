@@ -58,12 +58,12 @@ fn main() {
 
     let dext = [ash::extensions::khr::Swapchain::name().as_ptr()];
     let validated_devices = devices
-        .into_iter()
+        .iter()
         .filter(|device| {
             if dext.len() > 0 {
                 let avail_dext = unsafe {
                     instance
-                        .enumerate_device_extension_properties(*device)
+                        .enumerate_device_extension_properties(**device)
                         .unwrap()
                 };
                 if dext
@@ -84,7 +84,7 @@ fn main() {
             }
 
             let queue_props =
-                unsafe { instance.get_physical_device_queue_family_properties(*device) };
+                unsafe { instance.get_physical_device_queue_family_properties(**device) };
             for i in 0..queue_props.len() {
                 if glfw.get_physical_device_presentation_support_raw(
                     instance.handle().as_raw() as vk_sys::Instance,
@@ -108,7 +108,7 @@ fn main() {
         println!("{}: {}", i, unsafe {
             std::ffi::CStr::from_ptr(
                 instance
-                    .get_physical_device_properties(validated_devices[i])
+                    .get_physical_device_properties(*validated_devices[i])
                     .device_name
                     .as_ptr(),
             )
@@ -158,14 +158,19 @@ fn main() {
          unsafe { surface_loader.destroy_surface(surface, None); }
     }
 
+    if config.device_index as usize >= devices.len() {
+        eprintln!("{}番目のデバイスは存在しない", config.device_index);
+        return;
+    }
+
     let physical_device = validated_devices[config.device_index as usize];
     let queue_props =
-        unsafe { instance.get_physical_device_queue_family_properties(physical_device) };
+        unsafe { instance.get_physical_device_queue_family_properties(*physical_device) };
 
     let supported = (0..queue_props.len())
         .map(|i| unsafe {
             surface_loader
-                .get_physical_device_surface_support(physical_device, i as u32, surface)
+                .get_physical_device_surface_support(*physical_device, i as u32, surface)
                 .unwrap()
         })
         .collect::<Vec<_>>();
@@ -199,11 +204,11 @@ fn main() {
         vec![builder(graphics_queue_index), builder(present_queue_index)]
     };
 
-    let features = unsafe { instance.get_physical_device_features(physical_device) };
+    let features = unsafe { instance.get_physical_device_features(*physical_device) };
     let device = unsafe {
         instance
             .create_device(
-                physical_device,
+                *physical_device,
                 &ash::vk::DeviceCreateInfo::builder()
                     .queue_create_infos(&queues)
                     .enabled_extension_names(&dext)
@@ -219,7 +224,7 @@ fn main() {
 
     let formats = unsafe {
         surface_loader
-            .get_physical_device_surface_formats(physical_device, surface)
+            .get_physical_device_surface_formats(*physical_device, surface)
             .unwrap()
     };
     if formats.len() == 0 {
@@ -244,7 +249,7 @@ fn main() {
 
     let surface_capabilities = unsafe {
         surface_loader
-            .get_physical_device_surface_capabilities(physical_device, surface)
+            .get_physical_device_surface_capabilities(*physical_device, surface)
             .unwrap()
     };
     let swapchain_extent = if surface_capabilities.current_extent.width == -1i32 as u32 {
