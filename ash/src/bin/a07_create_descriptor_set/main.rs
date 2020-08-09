@@ -119,29 +119,25 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let window = glfw.with_primary_monitor(|glfw, m| {
-        glfw.create_window(
-            config.width,
-            config.height,
-            config.prog_name.as_str(),
-            if config.fullscreen {
-                m.map_or(glfw::WindowMode::Windowed, |m| {
-                    glfw::WindowMode::FullScreen(m)
-                })
-            } else {
-                glfw::WindowMode::Windowed
-            },
-        )
-    });
+    let (window, events) = glfw
+        .with_primary_monitor(|glfw, m| {
+            glfw.create_window(
+                config.width,
+                config.height,
+                config.prog_name.as_str(),
+                if config.fullscreen {
+                    m.map_or(glfw::WindowMode::Windowed, |m| {
+                        glfw::WindowMode::FullScreen(m)
+                    })
+                } else {
+                    glfw::WindowMode::Windowed
+                },
+            )
+        })
+        .expect("ウィンドウを作成できない");
 
-    if window.is_none() {
-        eprintln!("ウィンドウを作成できない");
-        return;
-    }
-
-    let window = window.unwrap();
     let mut raw_surface: vk_sys::SurfaceKHR = 0;
-    if window.0.create_window_surface(
+    if window.create_window_surface(
         instance.handle().as_raw() as vk_sys::Instance,
         std::ptr::null(),
         &mut raw_surface,
@@ -290,8 +286,9 @@ fn main() {
         .binding(0)
         .stage_flags(ash::vk::ShaderStageFlags::VERTEX)
         .build()];
-    let descriptor_set_layout =
-        std::cell::RefCell::new(Vec::<ash::vk::DescriptorSetLayout>::with_capacity(swapchain_image_count as usize));
+    let descriptor_set_layout = std::cell::RefCell::new(
+        Vec::<ash::vk::DescriptorSetLayout>::with_capacity(swapchain_image_count as usize),
+    );
     defer! {
         descriptor_set_layout.borrow().iter().for_each(|item|{
             unsafe { device.destroy_descriptor_set_layout(*item, None) };
@@ -314,7 +311,7 @@ fn main() {
                 &ash::vk::DescriptorSetAllocateInfo::builder()
                     .descriptor_pool(descriptor_pool)
                     .set_layouts(descriptor_set_layout.borrow().as_slice())
-                    .build()
+                    .build(),
             )
             .unwrap()
     };

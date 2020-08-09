@@ -119,29 +119,25 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let window = glfw.with_primary_monitor(|glfw, m| {
-        glfw.create_window(
-            config.width,
-            config.height,
-            config.prog_name.as_str(),
-            if config.fullscreen {
-                m.map_or(glfw::WindowMode::Windowed, |m| {
-                    glfw::WindowMode::FullScreen(m)
-                })
-            } else {
-                glfw::WindowMode::Windowed
-            },
-        )
-    });
+    let (window, events) = glfw
+        .with_primary_monitor(|glfw, m| {
+            glfw.create_window(
+                config.width,
+                config.height,
+                config.prog_name.as_str(),
+                if config.fullscreen {
+                    m.map_or(glfw::WindowMode::Windowed, |m| {
+                        glfw::WindowMode::FullScreen(m)
+                    })
+                } else {
+                    glfw::WindowMode::Windowed
+                },
+            )
+        })
+        .expect("ウィンドウを作成できない");
 
-    if window.is_none() {
-        eprintln!("ウィンドウを作成できない");
-        return;
-    }
-
-    let window = window.unwrap();
     let mut raw_surface: vk_sys::SurfaceKHR = 0;
-    if window.0.create_window_surface(
+    if window.create_window_surface(
         instance.handle().as_raw() as vk_sys::Instance,
         std::ptr::null(),
         &mut raw_surface,
@@ -284,13 +280,15 @@ fn main() {
         .build()];
 
     let render_pass = unsafe {
-        device.create_render_pass(
-            &ash::vk::RenderPassCreateInfo::builder()
-                .attachments(&attachments)
-                .subpasses(&subpass)
-                .build(),
-            None,
-        ).unwrap()
+        device
+            .create_render_pass(
+                &ash::vk::RenderPassCreateInfo::builder()
+                    .attachments(&attachments)
+                    .subpasses(&subpass)
+                    .build(),
+                None,
+            )
+            .unwrap()
     };
 
     defer! { unsafe { device.destroy_render_pass(render_pass, None); }}

@@ -61,7 +61,11 @@ fn main() {
         .iter()
         .filter(|device| {
             if dext.len() > 0 {
-                let avail_dext = unsafe { instance.enumerate_device_extension_properties(**device).unwrap() };
+                let avail_dext = unsafe {
+                    instance
+                        .enumerate_device_extension_properties(**device)
+                        .unwrap()
+                };
                 if dext
                     .iter()
                     .find(|w| {
@@ -115,29 +119,25 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let window = glfw.with_primary_monitor(|glfw, m| {
-        glfw.create_window(
-            config.width,
-            config.height,
-            config.prog_name.as_str(),
-            if config.fullscreen {
-                m.map_or(glfw::WindowMode::Windowed, |m| {
-                    glfw::WindowMode::FullScreen(m)
-                })
-            } else {
-                glfw::WindowMode::Windowed
-            },
-        )
-    });
+    let (window, events) = glfw
+        .with_primary_monitor(|glfw, m| {
+            glfw.create_window(
+                config.width,
+                config.height,
+                config.prog_name.as_str(),
+                if config.fullscreen {
+                    m.map_or(glfw::WindowMode::Windowed, |m| {
+                        glfw::WindowMode::FullScreen(m)
+                    })
+                } else {
+                    glfw::WindowMode::Windowed
+                },
+            )
+        })
+        .expect("ウィンドウを作成できない");
 
-    if window.is_none() {
-        eprintln!("ウィンドウを作成できない");
-        return;
-    }
-
-    let window = window.unwrap();
     let mut raw_surface: vk_sys::SurfaceKHR = 0;
-    if window.0.create_window_surface(
+    if window.create_window_surface(
         instance.handle().as_raw() as vk_sys::Instance,
         std::ptr::null(),
         &mut raw_surface,

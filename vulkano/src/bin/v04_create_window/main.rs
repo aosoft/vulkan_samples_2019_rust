@@ -73,32 +73,34 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let window = glfw.with_primary_monitor(|glfw, m| {
-        glfw.create_window(
-            config.width,
-            config.height,
-            config.prog_name.as_str(),
-            if config.fullscreen {
-                m.map_or(glfw::WindowMode::Windowed, |m| {
-                    glfw::WindowMode::FullScreen(m)
-                })
-            } else {
-                glfw::WindowMode::Windowed
-            },
-        )
-    });
+    let (window, events) = glfw
+        .with_primary_monitor(|glfw, m| {
+            glfw.create_window(
+                config.width,
+                config.height,
+                config.prog_name.as_str(),
+                if config.fullscreen {
+                    m.map_or(glfw::WindowMode::Windowed, |m| {
+                        glfw::WindowMode::FullScreen(m)
+                    })
+                } else {
+                    glfw::WindowMode::Windowed
+                },
+            )
+        })
+        .expect("ウィンドウを作成できない");
 
-    if window.is_none() {
-        eprintln!("ウィンドウを作成できない");
-        return;
-    }
-
-    let window = window.unwrap();
     let mut raw_surface: vk_sys::SurfaceKHR = 0;
-    if window.0.create_window_surface(instance.internal_object(), std::ptr::null(), &mut raw_surface) != 0 {
+    if window.create_window_surface(
+        instance.internal_object(),
+        std::ptr::null(),
+        &mut raw_surface,
+    ) != 0
+    {
         eprintln!("サーフェスを作成できない");
         return;
     }
 
-    let surface = unsafe { vulkano::swapchain::Surface::from_raw_surface(instance, raw_surface, window) };
+    let surface =
+        unsafe { vulkano::swapchain::Surface::from_raw_surface(instance, raw_surface, window) };
 }
