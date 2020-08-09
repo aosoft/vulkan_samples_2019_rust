@@ -159,7 +159,7 @@ fn main() {
         eprintln!("利用可能なピクセルフォーマットが無い");
         return;
     }
-    let selected_format = match formats
+    let format = match formats
         .iter()
         .find(|f| f.0 == vulkano::format::Format::B8G8R8A8Unorm)
     {
@@ -167,13 +167,8 @@ fn main() {
         None => formats
             .iter()
             .find(|f| f.0 == vulkano::format::Format::R8G8B8A8Unorm),
-    };
-    if selected_format.is_none() {
-        eprintln!("利用可能なピクセルフォーマットが無い");
-        return;
     }
-
-    let format = selected_format.unwrap();
+    .expect("利用可能なピクセルフォーマットが無い");
 
     let surface_capabilities = surface.capabilities(physical_device).unwrap();
     let swapchain_extent = surface_capabilities

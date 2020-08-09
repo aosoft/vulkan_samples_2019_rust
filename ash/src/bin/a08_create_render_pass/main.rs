@@ -227,7 +227,7 @@ fn main() {
         eprintln!("利用可能なピクセルフォーマットが無い");
         return;
     }
-    let selected_format = match formats
+    let format = match formats
         .iter()
         .find(|f| f.format == ash::vk::Format::B8G8R8A8_UNORM)
     {
@@ -235,13 +235,8 @@ fn main() {
         None => formats
             .iter()
             .find(|f| f.format == ash::vk::Format::R8G8B8A8_UNORM),
-    };
-    if selected_format.is_none() {
-        eprintln!("利用可能なピクセルフォーマットが無い");
-        return;
     }
-
-    let format = selected_format.unwrap();
+    .expect("利用可能なピクセルフォーマットが無い");
 
     let attachments = [
         ash::vk::AttachmentDescription::builder()
