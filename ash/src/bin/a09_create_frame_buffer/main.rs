@@ -342,6 +342,7 @@ fn main() {
     let allocator_info = vk_mem::AllocatorCreateInfo {
         physical_device: *physical_device,
         device: device.clone(),
+        instance: instance.clone(),
         ..vk_mem::AllocatorCreateInfo::default()
     };
     let allocator = vk_mem::Allocator::new(&allocator_info).expect("アロケータを作成できない");
@@ -375,6 +376,7 @@ fn main() {
                 ash::vk::Extent3D::builder()
                     .width(swapchain_extent.width)
                     .height(swapchain_extent.height)
+                    .depth(1)
                     .build(),
             )
             .build();
@@ -435,7 +437,11 @@ impl FrameBuffer<'_> {
         FrameBuffer {
             device: device,
             allocator: allocator,
-            ..unsafe { std::mem::zeroed::<FrameBuffer>() }
+            color_image_attachment: Default::default(),
+            depth_image: Default::default(),
+            depth_image_allocation: unsafe { std::mem::zeroed() },
+            depth_image_attachment: Default::default(),
+            framebuffer: Default::default()
         }
     }
 }
@@ -460,7 +466,7 @@ impl Drop for FrameBuffer<'_> {
 
         if self.depth_image.as_raw() != 0 {
             self.allocator
-                .destroy_image(self.depth_image, &self.depth_image_allocation);
+                .destroy_image(self.depth_image, &self.depth_image_allocation).unwrap();
         }
     }
 }
