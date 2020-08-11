@@ -369,6 +369,7 @@ fn main() {
             .format(ash::vk::Format::D16_UNORM)
             .mip_levels(1)
             .array_layers(1)
+            .samples(ash::vk::SampleCountFlags::TYPE_1)
             .usage(ash::vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT)
             .initial_layout(ash::vk::ImageLayout::UNDEFINED)
             .image_type(ash::vk::ImageType::TYPE_2D)
