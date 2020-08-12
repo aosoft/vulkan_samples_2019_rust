@@ -86,7 +86,7 @@ fn create_app<'a, 'b, S: Into<String>>(name: S) -> App<'a, 'b> {
                 .long("shader")
                 .short("s")
                 .help("shader directory")
-                .default_value("../shaders/"),
+                .default_value("./shaders/"),
         )
         .arg(
             Arg::with_name("mesh")
