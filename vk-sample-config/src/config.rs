@@ -29,7 +29,7 @@ impl Configs {
             validation: args.is_present("validation"),
             debug_mode: args.is_present("debug"),
             shader_dir: args.value_of("shader").unwrap_or("").to_string(),
-            mesh_file: args.value_of("mesh").unwrap_or("").to_string()
+            mesh_file: args.value_of("mesh").unwrap_or("").to_string(),
         }
     }
 }

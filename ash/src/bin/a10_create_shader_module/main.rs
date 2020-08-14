@@ -246,6 +246,8 @@ fn main() {
             .unwrap()
     };
 
+    defer! { unsafe { device.destroy_shader_module(vertex_shader_module, None); } }
+
     let fragment_shader_file_path: std::path::PathBuf =
         [config.shader_dir.as_str(), "simple.frag.spv"]
             .iter()
@@ -264,6 +266,8 @@ fn main() {
             )
             .unwrap()
     };
+
+    defer! { unsafe { device.destroy_shader_module(fragment_shader_module, None); } }
 }
 
 unsafe fn from_slice<'a, T, U>(src: &'a [U]) -> &'a [T] {

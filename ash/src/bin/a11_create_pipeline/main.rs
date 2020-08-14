@@ -3,8 +3,21 @@
 extern crate scopeguard;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
-use vk_sample_config::config;
 use std::io::Read;
+use vk_sample_config::config;
+
+struct Vertex {
+    pub position: nalgebra_glm::Vec3,
+    pub normal: nalgebra_glm::Vec3,
+    pub tangent: nalgebra_glm::Vec3,
+    pub texcoord: nalgebra_glm::Vec3,
+}
+
+impl Default for Vertex {
+    fn default() -> Self {
+        unsafe { std::mem::zeroed() }
+    }
+}
 
 #[allow(unused_variables)]
 fn main() {
@@ -448,6 +461,28 @@ fn main() {
         framebuffers.push(framebuffer);
     }
 
+    let vertex_shader_file_path: std::path::PathBuf =
+        [config.shader_dir.as_str(), "simple.vert.spv"]
+            .iter()
+            .collect();
+    let mut vertex_shader_file =
+        std::fs::File::open(vertex_shader_file_path).expect("頂点シェーダを読む事ができない");
+    let mut vertex_shader_bin = Vec::<u8>::new();
+    vertex_shader_file.read_to_end(&mut vertex_shader_bin);
+    //let vertex_shader_bin = vulkan_samples_2019_rust_ash::to_vec_u32(vertex_shader_bin.as_slice());
+    let vertex_shader_module = unsafe {
+        device
+            .create_shader_module(
+                &ash::vk::ShaderModuleCreateInfo::builder()
+                    .code(unsafe { from_slice(&vertex_shader_bin.as_slice()) })
+                    .build(),
+                None,
+            )
+            .unwrap()
+    };
+
+    defer! { unsafe { device.destroy_shader_module(vertex_shader_module, None); } }
+
     let fragment_shader_file_path: std::path::PathBuf =
         [config.shader_dir.as_str(), "simple.frag.spv"]
             .iter()
@@ -467,8 +502,33 @@ fn main() {
             .unwrap()
     };
 
+    defer! { unsafe { device.destroy_shader_module(fragment_shader_module, None); } }
 
-    
+    let pipeline_shader_stages = [
+        ash::vk::PipelineShaderStageCreateInfo::builder()
+            .stage(ash::vk::ShaderStageFlags::VERTEX)
+            .module(vertex_shader_module)
+            .name(unsafe {
+                std::ffi::CStr::from_ptr("main\0".as_ptr() as *const std::os::raw::c_char)
+            })
+            .build(),
+        ash::vk::PipelineShaderStageCreateInfo::builder()
+            .stage(ash::vk::ShaderStageFlags::FRAGMENT)
+            .module(fragment_shader_module)
+            .name(unsafe {
+                std::ffi::CStr::from_ptr("main\0".as_ptr() as *const std::os::raw::c_char)
+            })
+            .build(),
+    ];
+
+    let push_constant_range = [ash::vk::PushConstantRange::builder()
+        .stage_flags(ash::vk::ShaderStageFlags::VERTEX | ash::vk::ShaderStageFlags::FRAGMENT)
+        .offset(0)
+        .size(
+            (std::mem::size_of::<nalgebra_glm::Mat4>() * 2
+                + std::mem::size_of::<nalgebra_glm::Vec3>() * 2) as u32,
+        )
+        .build()];
 }
 
 struct FrameBuffer<'a> {

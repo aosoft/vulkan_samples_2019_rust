@@ -414,7 +414,7 @@ fn main() {
                         .height(swapchain_extent.height)
                         .layers(1)
                         .build(),
-                    None
+                    None,
                 )
                 .unwrap()
         };
@@ -442,7 +442,7 @@ impl FrameBuffer<'_> {
             depth_image: Default::default(),
             depth_image_allocation: unsafe { std::mem::zeroed() },
             depth_image_attachment: Default::default(),
-            framebuffer: Default::default()
+            framebuffer: Default::default(),
         }
     }
 }
@@ -455,19 +455,22 @@ impl Drop for FrameBuffer<'_> {
 
         if self.color_image_attachment.as_raw() != 0 {
             unsafe {
-                self.device.destroy_image_view(self.color_image_attachment, None);
+                self.device
+                    .destroy_image_view(self.color_image_attachment, None);
             }
         }
 
         if self.depth_image_attachment.as_raw() != 0 {
             unsafe {
-                self.device.destroy_image_view(self.depth_image_attachment, None);
+                self.device
+                    .destroy_image_view(self.depth_image_attachment, None);
             }
         }
 
         if self.depth_image.as_raw() != 0 {
             self.allocator
-                .destroy_image(self.depth_image, &self.depth_image_allocation).unwrap();
+                .destroy_image(self.depth_image, &self.depth_image_allocation)
+                .unwrap();
         }
     }
 }
