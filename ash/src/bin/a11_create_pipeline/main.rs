@@ -475,7 +475,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { from_slice(&vertex_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_utility::from_slice(&vertex_shader_bin.as_slice()) })
                     .build(),
                 None,
             )
@@ -496,7 +496,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { from_slice(&fragment_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_utility::from_slice(&fragment_shader_bin.as_slice()) })
                     .build(),
                 None,
             )
@@ -606,11 +606,4 @@ impl Drop for FrameBuffer<'_> {
                 .unwrap();
         }
     }
-}
-
-unsafe fn from_slice<'a, T, U>(src: &'a [U]) -> &'a [T] {
-    std::slice::from_raw_parts::<T>(
-        src.as_ptr() as *const T,
-        src.len() / std::mem::size_of::<T>(),
-    )
 }
