@@ -1,6 +1,8 @@
 //  11_create_pipeline
 #[macro_use(defer)]
 extern crate scopeguard;
+
+#[macro_use(offset_of)]
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use std::io::Read;
@@ -11,7 +13,7 @@ struct Vertex {
     pub position: nalgebra_glm::Vec3,
     pub normal: nalgebra_glm::Vec3,
     pub tangent: nalgebra_glm::Vec3,
-    pub texcoord: nalgebra_glm::Vec3,
+    pub texcoord: nalgebra_glm::Vec2,
 }
 
 impl Default for Vertex {
@@ -379,6 +381,8 @@ fn main() {
             .unwrap()
     };
 
+    defer! { unsafe { device.destroy_render_pass(render_pass, None); }}
+
     let allocator_info = vk_mem::AllocatorCreateInfo {
         physical_device: *physical_device,
         device: device.clone(),
@@ -531,29 +535,134 @@ fn main() {
         )
         .build()];
     let pipeline_layout = unsafe {
-        device.create_pipeline_layout(
-            &ash::vk::PipelineLayoutCreateInfo::builder()
-                .set_layouts(descriptor_set_layout.borrow().as_slice())
-                .push_constant_ranges(push_constant_range.as_ref())
-                .build(),
-                None)
-        .unwrap()
+        device
+            .create_pipeline_layout(
+                &ash::vk::PipelineLayoutCreateInfo::builder()
+                    .set_layouts(descriptor_set_layout.borrow().as_slice())
+                    .push_constant_ranges(push_constant_range.as_ref())
+                    .build(),
+                None,
+            )
+            .unwrap()
     };
     defer! { unsafe { device.destroy_pipeline_layout(pipeline_layout, None); } }
 
-    let vertex_input_binding = ash::vk::VertexInputBindingDescription::builder()
+    let vertex_input_binding = [ash::vk::VertexInputBindingDescription::builder()
         .binding(0)
         .stride(std::mem::size_of::<Vertex>() as u32)
         .input_rate(ash::vk::VertexInputRate::VERTEX)
-        .build();
+        .build()];
     let vertex_input_attribute = [
         ash::vk::VertexInputAttributeDescription::builder()
             .location(0)
             .binding(0)
             .format(ash::vk::Format::R32G32B32_SFLOAT)
-            //.offset()
-            .build()
+            .offset(vk_sample_utility::offset_of!(Vertex, position) as u32)
+            .build(),
+        ash::vk::VertexInputAttributeDescription::builder()
+            .location(1)
+            .binding(0)
+            .format(ash::vk::Format::R32G32B32_SFLOAT)
+            .offset(vk_sample_utility::offset_of!(Vertex, normal) as u32)
+            .build(),
+        ash::vk::VertexInputAttributeDescription::builder()
+            .location(2)
+            .binding(0)
+            .format(ash::vk::Format::R32G32B32_SFLOAT)
+            .offset(vk_sample_utility::offset_of!(Vertex, tangent) as u32)
+            .build(),
+        ash::vk::VertexInputAttributeDescription::builder()
+            .location(3)
+            .binding(0)
+            .format(ash::vk::Format::R32G32_SFLOAT)
+            .offset(vk_sample_utility::offset_of!(Vertex, texcoord) as u32)
+            .build(),
     ];
+    let input_assembly_info = ash::vk::PipelineInputAssemblyStateCreateInfo::builder()
+        .topology(ash::vk::PrimitiveTopology::TRIANGLE_LIST)
+        .build();
+    let viewport_info = ash::vk::PipelineViewportStateCreateInfo::builder()
+        .viewport_count(1)
+        .scissor_count(1)
+        .build();
+    let rasterization_info = ash::vk::PipelineRasterizationStateCreateInfo::builder()
+        .depth_clamp_enable(false)
+        .rasterizer_discard_enable(false)
+        .polygon_mode(ash::vk::PolygonMode::FILL)
+        .cull_mode(ash::vk::CullModeFlags::NONE)
+        .front_face(ash::vk::FrontFace::COUNTER_CLOCKWISE)
+        .depth_bias_enable(false)
+        .line_width(1.0)
+        .build();
+    let stencil_op = ash::vk::StencilOpState::builder()
+        .fail_op(ash::vk::StencilOp::KEEP)
+        .pass_op(ash::vk::StencilOp::KEEP)
+        .compare_op(ash::vk::CompareOp::ALWAYS)
+        .build();
+    let depth_stencil_info = ash::vk::PipelineDepthStencilStateCreateInfo::builder()
+        .depth_test_enable(true)
+        .depth_write_enable(true)
+        .depth_compare_op(ash::vk::CompareOp::LESS_OR_EQUAL)
+        .depth_bounds_test_enable(false)
+        .stencil_test_enable(false)
+        .front(stencil_op)
+        .back(stencil_op)
+        .build();
+    let color_blend_attachments = [ash::vk::PipelineColorBlendAttachmentState::builder()
+        .color_write_mask(
+            ash::vk::ColorComponentFlags::R
+                | ash::vk::ColorComponentFlags::G
+                | ash::vk::ColorComponentFlags::B
+                | ash::vk::ColorComponentFlags::A,
+        )
+        .build()];
+    let color_blend_info = ash::vk::PipelineColorBlendStateCreateInfo::builder()
+        .attachments(color_blend_attachments.as_ref())
+        .build();
+    let dynamic_states = [
+        ash::vk::DynamicState::VIEWPORT,
+        ash::vk::DynamicState::SCISSOR,
+    ];
+    let dynamic_state_info = ash::vk::PipelineDynamicStateCreateInfo::builder()
+        .dynamic_states(dynamic_states.as_ref())
+        .build();
+    let vertex_input_state = ash::vk::PipelineVertexInputStateCreateInfo::builder()
+        .vertex_attribute_descriptions(vertex_input_attribute.as_ref())
+        .vertex_binding_descriptions(vertex_input_binding.as_ref())
+        .build();
+    let multisample_info = ash::vk::PipelineMultisampleStateCreateInfo::builder().build();
+
+    let pipeline_create_info = [ash::vk::GraphicsPipelineCreateInfo::builder()
+        .stages(pipeline_shader_stages.as_ref())
+        .vertex_input_state(&vertex_input_state)
+        .input_assembly_state(&input_assembly_info)
+        .viewport_state(&viewport_info)
+        .rasterization_state(&rasterization_info)
+        .multisample_state(&multisample_info)
+        .depth_stencil_state(&depth_stencil_info)
+        .color_blend_state(&color_blend_info)
+        .dynamic_state(&dynamic_state_info)
+        .layout(pipeline_layout)
+        .render_pass(render_pass)
+        .build()];
+
+    let graphics_pipeline = unsafe {
+        device
+            .create_graphics_pipelines(
+                ash::vk::PipelineCache::null(),
+                pipeline_create_info.as_ref(),
+                None,
+            )
+            .unwrap()
+    };
+
+    defer! {
+        unsafe {
+            for pipeline in graphics_pipeline.into_iter() {
+                device.destroy_pipeline(pipeline, None);
+            }
+        }
+    }
 }
 
 struct FrameBuffer<'a> {

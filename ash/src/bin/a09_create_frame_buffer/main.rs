@@ -339,6 +339,8 @@ fn main() {
             .unwrap()
     };
 
+    defer! { unsafe { device.destroy_render_pass(render_pass, None); }}
+
     let allocator_info = vk_mem::AllocatorCreateInfo {
         physical_device: *physical_device,
         device: device.clone(),
