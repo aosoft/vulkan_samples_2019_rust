@@ -1,6 +1,6 @@
 //  02_list_devices
 use std::borrow::Cow;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 
 fn main() {
     let config = config::Configs::new("list_devices");

@@ -3,10 +3,11 @@
 extern crate scopeguard;
 
 #[macro_use(offset_of)]
+
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use std::io::Read;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 
 #[repr(C, packed)]
 struct Vertex {
@@ -479,7 +480,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_utility::from_slice(&vertex_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_common::from_slice(&vertex_shader_bin.as_slice()) })
                     .build(),
                 None,
             )
@@ -500,7 +501,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_utility::from_slice(&fragment_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_common::from_slice(&fragment_shader_bin.as_slice()) })
                     .build(),
                 None,
             )
@@ -557,25 +558,25 @@ fn main() {
             .location(0)
             .binding(0)
             .format(ash::vk::Format::R32G32B32_SFLOAT)
-            .offset(vk_sample_utility::offset_of!(Vertex, position) as u32)
+            .offset(vk_sample_common::offset_of!(Vertex, position) as u32)
             .build(),
         ash::vk::VertexInputAttributeDescription::builder()
             .location(1)
             .binding(0)
             .format(ash::vk::Format::R32G32B32_SFLOAT)
-            .offset(vk_sample_utility::offset_of!(Vertex, normal) as u32)
+            .offset(vk_sample_common::offset_of!(Vertex, normal) as u32)
             .build(),
         ash::vk::VertexInputAttributeDescription::builder()
             .location(2)
             .binding(0)
             .format(ash::vk::Format::R32G32B32_SFLOAT)
-            .offset(vk_sample_utility::offset_of!(Vertex, tangent) as u32)
+            .offset(vk_sample_common::offset_of!(Vertex, tangent) as u32)
             .build(),
         ash::vk::VertexInputAttributeDescription::builder()
             .location(3)
             .binding(0)
             .format(ash::vk::Format::R32G32_SFLOAT)
-            .offset(vk_sample_utility::offset_of!(Vertex, texcoord) as u32)
+            .offset(vk_sample_common::offset_of!(Vertex, texcoord) as u32)
             .build(),
     ];
     let input_assembly_info = ash::vk::PipelineInputAssemblyStateCreateInfo::builder()

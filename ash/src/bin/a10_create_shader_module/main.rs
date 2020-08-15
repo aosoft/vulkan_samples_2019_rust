@@ -4,7 +4,7 @@ extern crate scopeguard;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use std::io::Read;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 
 #[allow(unused_variables)]
 fn main() {
@@ -239,7 +239,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_utility::from_slice(&vertex_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_common::from_slice(&vertex_shader_bin.as_slice()) })
                     .build(),
                 None,
             )
@@ -260,7 +260,7 @@ fn main() {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_utility::from_slice(&fragment_shader_bin.as_slice()) })
+                    .code(unsafe { vk_sample_common::from_slice(&fragment_shader_bin.as_slice()) })
                     .build(),
                 None,
             )

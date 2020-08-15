@@ -1,6 +1,6 @@
 //  08_create_render_pass
 use std::borrow::Cow;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 use vulkano::VulkanObject;
 
 #[allow(unused_variables)]

@@ -2,7 +2,7 @@
 #[macro_use(defer)]
 extern crate scopeguard;
 use ash::version::{EntryV1_0, InstanceV1_0};
-use vk_sample_utility::config;
+use vk_sample_common::config;
 
 fn main() {
     let config = config::Configs::new("get_instance");

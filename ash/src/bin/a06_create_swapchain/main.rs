@@ -3,7 +3,7 @@
 extern crate scopeguard;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 
 #[allow(unused_variables)]
 fn main() {

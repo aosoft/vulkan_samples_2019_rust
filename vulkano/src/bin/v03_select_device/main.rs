@@ -1,6 +1,6 @@
 //  03_select_device
 use std::borrow::Cow;
-use vk_sample_utility::config;
+use vk_sample_common::config;
 use vulkano::VulkanObject;
 
 fn main() {

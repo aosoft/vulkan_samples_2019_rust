@@ -1,5 +1,5 @@
 [package]
-name = "vk-sample-utility"
+name = "vk-sample-common"
 version = "0.1.0"
 authors = ["Yasuhiro Taniuchi"]
 edition = "2018"
