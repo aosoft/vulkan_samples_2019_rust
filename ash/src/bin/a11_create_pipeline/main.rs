@@ -4,7 +4,7 @@ extern crate scopeguard;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use std::io::Read;
-use vk_sample_config::config;
+use vk_sample_utility::config;
 
 #[repr(C, packed)]
 struct Vertex {

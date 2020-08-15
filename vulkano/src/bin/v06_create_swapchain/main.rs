@@ -1,6 +1,6 @@
 //  06_create_swapchain
 use std::borrow::Cow;
-use vk_sample_config::config;
+use vk_sample_utility::config;
 use vulkano::VulkanObject;
 
 #[allow(unused_variables)]

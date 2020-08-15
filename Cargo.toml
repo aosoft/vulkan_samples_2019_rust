@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "vk-sample-config",
+    "vk-sample-utility",
     "ash",
     "vulkano"
 ]

@@ -1,6 +1,6 @@
 //  01_get_instance
 use std::borrow::Cow;
-use vk_sample_config::config;
+use vk_sample_utility::config;
 
 fn main() {
     let config = config::Configs::new("get_instance");
