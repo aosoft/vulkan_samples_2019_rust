@@ -6,6 +6,7 @@ use ash::vk::Handle;
 use std::io::Read;
 use vk_sample_config::config;
 
+#[repr(C, packed)]
 struct Vertex {
     pub position: nalgebra_glm::Vec3,
     pub normal: nalgebra_glm::Vec3,
@@ -529,6 +530,30 @@ fn main() {
                 + std::mem::size_of::<nalgebra_glm::Vec3>() * 2) as u32,
         )
         .build()];
+    let pipeline_layout = unsafe {
+        device.create_pipeline_layout(
+            &ash::vk::PipelineLayoutCreateInfo::builder()
+                .set_layouts(descriptor_set_layout.borrow().as_slice())
+                .push_constant_ranges(push_constant_range.as_ref())
+                .build(),
+                None)
+        .unwrap()
+    };
+    defer! { unsafe { device.destroy_pipeline_layout(pipeline_layout, None); } }
+
+    let vertex_input_binding = ash::vk::VertexInputBindingDescription::builder()
+        .binding(0)
+        .stride(std::mem::size_of::<Vertex>() as u32)
+        .input_rate(ash::vk::VertexInputRate::VERTEX)
+        .build();
+    let vertex_input_attribute = [
+        ash::vk::VertexInputAttributeDescription::builder()
+            .location(0)
+            .binding(0)
+            .format(ash::vk::Format::R32G32B32_SFLOAT)
+            //.offset()
+            .build()
+    ];
 }
 
 struct FrameBuffer<'a> {
