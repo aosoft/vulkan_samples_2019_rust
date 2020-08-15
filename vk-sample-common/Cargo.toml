@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.1"
+nalgebra-glm = "0.7.0"
+
