@@ -80,7 +80,7 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let (window, events) = glfw
+    let (window, _) = glfw
         .with_primary_monitor(|glfw, m| {
             glfw.create_window(
                 config.width,

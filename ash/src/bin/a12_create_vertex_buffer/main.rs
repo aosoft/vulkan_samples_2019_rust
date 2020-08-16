@@ -2,7 +2,6 @@
 #[macro_use(defer)]
 extern crate scopeguard;
 
-#[macro_use(offset_of)]
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use vk_sample_common::config;
@@ -121,7 +120,7 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let (window, events) = glfw
+    let (window, _) = glfw
         .with_primary_monitor(|glfw, m| {
             glfw.create_window(
                 config.width,
@@ -269,7 +268,7 @@ fn main() {
             &temporary_vertex_buffer_alloc_info,
         )
         .expect("一時頂点バッファを作成できない");
-    defer! { allocator.destroy_buffer(temporary_vertex_buffer, &temporary_vertex_buffer_allocation); }
+    defer! { allocator.destroy_buffer(temporary_vertex_buffer, &temporary_vertex_buffer_allocation).unwrap(); }
 
     let vertex_buffer_create_info = ash::vk::BufferCreateInfo::builder()
         .size(vertex_buffer_size as u64)
@@ -282,7 +281,7 @@ fn main() {
     let (vertex_buffer, vertex_buffer_allocation, vertex_buffer_allocation_info) = allocator
         .create_buffer(&vertex_buffer_create_info, &vertex_buffer_alloc_info)
         .expect("頂点バッファを作成できない");
-    defer! { allocator.destroy_buffer(vertex_buffer, &vertex_buffer_allocation); }
+    defer! { allocator.destroy_buffer(vertex_buffer, &vertex_buffer_allocation).unwrap(); }
 
     let mapped = allocator
         .map_memory(&temporary_vertex_buffer_allocation)

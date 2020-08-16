@@ -2,8 +2,6 @@
 #[macro_use(defer)]
 extern crate scopeguard;
 
-#[macro_use(offset_of)]
-
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk::Handle;
 use std::io::Read;
@@ -123,7 +121,7 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ClientApi(glfw::ClientApiHint::NoApi));
 
-    let (window, events) = glfw
+    let (window, _) = glfw
         .with_primary_monitor(|glfw, m| {
             glfw.create_window(
                 config.width,
@@ -460,13 +458,13 @@ fn main() {
     let mut vertex_shader_file =
         std::fs::File::open(vertex_shader_file_path).expect("頂点シェーダを読む事ができない");
     let mut vertex_shader_bin = Vec::<u8>::new();
-    vertex_shader_file.read_to_end(&mut vertex_shader_bin);
+    vertex_shader_file.read_to_end(&mut vertex_shader_bin).unwrap();
     //let vertex_shader_bin = vulkan_samples_2019_rust_ash::to_vec_u32(vertex_shader_bin.as_slice());
     let vertex_shader_module = unsafe {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_common::from_slice(&vertex_shader_bin.as_slice()) })
+                    .code(vk_sample_common::from_slice(&vertex_shader_bin.as_slice()))
                     .build(),
                 None,
             )
@@ -482,12 +480,12 @@ fn main() {
     let mut fragment_shader_file = std::fs::File::open(fragment_shader_file_path)
         .expect("フラグメントシェーダを読む事ができない");
     let mut fragment_shader_bin = Vec::<u8>::new();
-    fragment_shader_file.read_to_end(&mut fragment_shader_bin);
+    fragment_shader_file.read_to_end(&mut fragment_shader_bin).unwrap();
     let fragment_shader_module = unsafe {
         device
             .create_shader_module(
                 &ash::vk::ShaderModuleCreateInfo::builder()
-                    .code(unsafe { vk_sample_common::from_slice(&fragment_shader_bin.as_slice()) })
+                    .code(vk_sample_common::from_slice(&fragment_shader_bin.as_slice()))
                     .build(),
                 None,
             )
