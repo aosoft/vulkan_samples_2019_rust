@@ -218,6 +218,13 @@ fn main() {
         unsafe { device.destroy_device(None); }
     }
 
+    let graphics_queue = unsafe { device.get_device_queue(graphics_queue_index, 0) };
+    let present_queue = if eq_queue {
+        graphics_queue
+    } else {
+        unsafe { device.get_device_queue(present_queue_index, 0) }
+    };
+
     let graphics_command_pool = unsafe {
         device
             .create_command_pool(
