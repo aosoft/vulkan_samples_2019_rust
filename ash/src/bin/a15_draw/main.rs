@@ -708,8 +708,8 @@ fn main() {
 
     defer! {
         unsafe {
-            for pipeline in graphics_pipeline.into_iter() {
-                device.destroy_pipeline(pipeline, None);
+            for pipeline in graphics_pipeline.iter() {
+                device.destroy_pipeline(*pipeline, None);
             }
         }
     }
@@ -782,17 +782,38 @@ fn main() {
     //  13_create_semaphore
     let mut semaphores = Vec::<Semaphores>::with_capacity(swapchain_image_count as usize);
     for i in 0..swapchain_image_count {
-        let fence = unsafe { device.create_fence(&ash::vk::FenceCreateInfo::builder().flags(ash::vk::FenceCreateFlags::SIGNALED).build(), None).unwrap() };
-        let image_acquired_semaphore = unsafe { device.create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None).unwrap() };
-        let draw_complete_semaphore = unsafe { device.create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None).unwrap() };
-        let image_ownership_semaphore = unsafe { device.create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None).unwrap() };
+        let fence = unsafe {
+            device
+                .create_fence(
+                    &ash::vk::FenceCreateInfo::builder()
+                        .flags(ash::vk::FenceCreateFlags::SIGNALED)
+                        .build(),
+                    None,
+                )
+                .unwrap()
+        };
+        let image_acquired_semaphore = unsafe {
+            device
+                .create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None)
+                .unwrap()
+        };
+        let draw_complete_semaphore = unsafe {
+            device
+                .create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None)
+                .unwrap()
+        };
+        let image_ownership_semaphore = unsafe {
+            device
+                .create_semaphore(&ash::vk::SemaphoreCreateInfo::builder().build(), None)
+                .unwrap()
+        };
 
         semaphores.push(Semaphores {
             device: &device,
             fence: fence,
             image_acquired_semaphore: image_acquired_semaphore,
             draw_complete_semaphore: draw_complete_semaphore,
-            image_ownership_semaphore: image_ownership_semaphore
+            image_ownership_semaphore: image_ownership_semaphore,
         })
     }
 
@@ -809,7 +830,118 @@ fn main() {
             .unwrap()
     };
 
+    defer! { unsafe { device.free_command_buffers(graphics_command_pool, graphics_command_buffers.as_slice()); }}
+
     //  15_draw
+    let init_command_buffer_begin_info = ash::vk::CommandBufferBeginInfo::builder()
+        .flags(ash::vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT)
+        .build();
+    let vertex_buffer_regions = [ash::vk::BufferCopy::builder()
+        .src_offset(0)
+        .dst_offset(0)
+        .size(vertex_buffer_size as u64)
+        .build()];
+
+    unsafe {
+        device
+            .begin_command_buffer(graphics_command_buffers[0], &init_command_buffer_begin_info)
+            .unwrap();
+        device.cmd_copy_buffer(
+            graphics_command_buffers[0],
+            temporary_vertex_buffer,
+            vertex_buffer,
+            vertex_buffer_regions.as_ref(),
+        );
+        device
+            .end_command_buffer(graphics_command_buffers[0])
+            .unwrap();
+        device
+            .queue_submit(
+                graphics_queue,
+                &[ash::vk::SubmitInfo::builder()
+                    .command_buffers(&[graphics_command_buffers[0]])
+                    .build()],
+                ash::vk::Fence::default(),
+            )
+            .unwrap();
+        device.queue_wait_idle(graphics_queue).unwrap();
+    }
+
+    let clear_values = [
+        ash::vk::ClearValue {
+            color: ash::vk::ClearColorValue {
+                float32: [0.0, 0.0, 0.0, 0.0],
+            },
+        },
+        ash::vk::ClearValue {
+            depth_stencil: ash::vk::ClearDepthStencilValue {
+                depth: 1.0,
+                stencil: 0,
+            },
+        },
+    ];
+
+    for i in 0..swapchain_image_count as usize {
+        let command_buffer = graphics_command_buffers[i];
+        unsafe {
+            device
+                .reset_command_buffer(command_buffer, ash::vk::CommandBufferResetFlags::empty())
+                .unwrap();
+            device
+                .begin_command_buffer(
+                    command_buffer,
+                    &ash::vk::CommandBufferBeginInfo::builder()
+                        .flags(ash::vk::CommandBufferUsageFlags::SIMULTANEOUS_USE)
+                        .build(),
+                )
+                .unwrap();
+        }
+        let pass_info = ash::vk::RenderPassBeginInfo::builder()
+            .render_pass(render_pass)
+            .framebuffer(framebuffers[1].framebuffer)
+            .render_area(
+                ash::vk::Rect2D::builder()
+                    .offset(ash::vk::Offset2D { x: 0, y: 0 })
+                    .extent(ash::vk::Extent2D {
+                        width: config.width,
+                        height: config.height,
+                    })
+                    .build(),
+            )
+            .clear_values(clear_values.as_ref())
+            .build();
+        unsafe {
+            device.cmd_begin_render_pass(
+                command_buffer,
+                &pass_info,
+                ash::vk::SubpassContents::INLINE,
+            );
+            device.cmd_bind_pipeline(
+                command_buffer,
+                ash::vk::PipelineBindPoint::GRAPHICS,
+                graphics_pipeline[0],
+            );
+        }
+        let viewport = [ash::vk::Viewport::builder()
+            .width(config.width as f32)
+            .height(config.height as f32)
+            .min_depth(0.0_f32)
+            .max_depth(1.0_f32)
+            .build()];
+        unsafe {
+            device.cmd_set_viewport(command_buffer, 0, viewport.as_ref());
+        }
+        let scissor = [                ash::vk::Rect2D::builder()
+            .offset(ash::vk::Offset2D { x: 0, y: 0 })
+            .extent(ash::vk::Extent2D {
+                width: config.width,
+                height: config.height,
+            })
+            .build()];
+        unsafe {
+            device.cmd_set_scissor(command_buffer, 0, scissor.as_ref());
+        }
+    }
 }
 
 struct FrameBuffer<'a> {

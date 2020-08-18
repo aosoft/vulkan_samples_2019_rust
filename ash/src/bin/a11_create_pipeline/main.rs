@@ -643,8 +643,8 @@ fn main() {
 
     defer! {
         unsafe {
-            for pipeline in graphics_pipeline.into_iter() {
-                device.destroy_pipeline(pipeline, None);
+            for pipeline in graphics_pipeline.iter() {
+                device.destroy_pipeline(*pipeline, None);
             }
         }
     }
