@@ -931,7 +931,7 @@ fn main() {
         unsafe {
             device.cmd_set_viewport(command_buffer, 0, viewport.as_ref());
         }
-        let scissor = [                ash::vk::Rect2D::builder()
+        let scissor = [ash::vk::Rect2D::builder()
             .offset(ash::vk::Offset2D { x: 0, y: 0 })
             .extent(ash::vk::Extent2D {
                 width: config.width,
@@ -940,7 +940,26 @@ fn main() {
             .build()];
         unsafe {
             device.cmd_set_scissor(command_buffer, 0, scissor.as_ref());
+            device.cmd_bind_descriptor_sets(
+                command_buffer,
+                ash::vk::PipelineBindPoint::GRAPHICS,
+                pipeline_layout,
+                0,
+                &[descriptor_set[i]],
+                &[0; 0],
+            );
         }
+
+        let vertex_buffers = [vertex_buffer];
+        let vertex_buffer_offsets = [0];
+        unsafe {
+            device.cmd_bind_vertex_buffers(
+                command_buffer,
+                0,
+                vertex_buffers.as_ref(),
+                vertex_buffer_offsets.as_ref(),
+            )
+        };
     }
 }
 
