@@ -1,9 +1,20 @@
-### 02_list_devices
+vulkan_samples_2019_rust
+====
 
-* 列挙した Extension のバージョン表示がない
-* device layers の列挙がない (vulkano が非サポート)
-    * vulkano 内のコードにコメントあり (Device layers were deprecated in Vulkan 1.0.13)
+[3DグラフィクスAPI Vulkanを出来るだけやさしく解説する本](https://fadis.booth.pm/items/1562222) のサンプルコードの Rust での実装を試みました。
 
-### 07_create_descriptor_set
+https://github.com/Fadis/vulkan_samples_2019
 
-* vulkano では DescriptorSet が Pipeline に事実上隠蔽化されているので DescriptorSet 単体での初期化ができなさそう。
+[assimp](https://www.assimp.org/) の Rust binding の導入がうまくいかなかったので下記は未実装 (または途中まで) です。
+
+* 00_mesh
+* 15_draw
+
+Vulkan のライブラリとして [vulkano](https://github.com/vulkano-rs/vulkano) を利用していましたが、 [vk-mem](https://github.com/gwihlidal/vk-mem-rs) が使えないため途中で [ash](https://github.com/MaikKlein/ash) に切り替えています。
+
+## 準備
+
+vk-mem のビルドのため使用する toolchain に応じた C++ コンパイラーが必要です。
+
+[GLFW](https://www.glfw.org/) のビルド済バイナリが必要です。 lib フォルダーに使用する toolchain に応じたビルド済の lib, dll 等をコピーしてください。
+
