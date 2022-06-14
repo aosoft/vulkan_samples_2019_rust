@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 vk-sample-common = { path = "../vk-sample-common" }
-ash = "0.31.0"
+ash = "0.33.1"
 vk-mem = "0.2.2"
 vk-sys = "0.5.2"
 nalgebra-glm = "0.7.0"
